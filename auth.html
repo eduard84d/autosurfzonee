@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AutoSurfZone</title>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCgmPqdrQy-A68EULCW8PAK8NKWpgwYEA4",
+      authDomain: "autosurfzone-b0f2e.firebaseapp.com",
+      projectId: "autosurfzone-b0f2e",
+      storageBucket: "autosurfzone-b0f2e.appspot.com",
+      messagingSenderId: "787957968303",
+      appId: "1:787957968303:web:17461efc4e06ae5c5c135a",
+      measurementId: "G-T5QGRM80FF"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+    const loginBtn = document.getElementById("login");
+    const registerBtn = document.getElementById("register");
+    const userInfo = document.getElementById("user-info");
+
+    registerBtn.onclick = async () => {
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
+        const user = userCredential.user;
+        await setDoc(doc(db, "users", user.uid), {
+          email: user.email,
+          views: 0,
+          earnings: 0,
+          clicks: 0
+        });
+        alert("Регистрация прошла успешно!");
+      } catch (error) {
+        alert("Ошибка: " + error.message);
+      }
+    };
+
+    loginBtn.onclick = async () => {
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
+        alert("Вход выполнен успешно!");
+      } catch (error) {
+        alert("Ошибка входа: " + error.message);
+      }
+    };
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const docSnap = await getDoc(doc(db, "users", user.uid));
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          userInfo.innerHTML = `Добро пожаловать, ${user.email}!<br>Просмотров: ${data.views} | Заработано: ${data.earnings} | Клики: ${data.clicks}`;
+        }
+      } else {
+        userInfo.innerHTML = "Вы не вошли в систему.";
+      }
+    });
+
+  </script>
+</head>
+<body>
+  <h1>AutoSurfZone</h1>
+  <input type="email" id="email" placeholder="Email" />
+  <input type="password" id="password" placeholder="Пароль" />
+  <button id="register">Регистрация</button>
+  <button id="login">Вход</button>
+  <p id="user-info"></p>
+</body>
+</html>
