@@ -1,3 +1,22 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+import { getFirestore, doc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyCgmPqdrQy-A68EULCW8PAK8NKWpgwYEA4",
+  authDomain: "autosurfzone-b0f2e.firebaseapp.com",
+  projectId: "autosurfzone-b0f2e",
+  storageBucket: "autosurfzone-b0f2e.appspot.com",
+  messagingSenderId: "787957968303",
+  appId: "1:787957968303:web:17461efc4e06ae5c5c135a"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// Список рекламных ссылок
 const adUrls = [
   "https://antautosurf.com/?ref=29085",
   "https://faucetpay.io/?r=2738792",
@@ -12,7 +31,8 @@ const adUrls = [
 ];
 
 let currentIndex = 0;
-let timerInterval = null;
+let uid = null;
+
 const adFrame = document.getElementById("adFrame");
 const timer = document.getElementById("timer");
 const nextBtn = document.getElementById("nextBtn");
@@ -22,11 +42,11 @@ function startAdTimer() {
   timer.textContent = `Подождите: ${timeLeft} сек`;
   nextBtn.disabled = true;
 
-  timerInterval = setInterval(() => {
+  const interval = setInterval(() => {
     timeLeft--;
     timer.textContent = `Подождите: ${timeLeft} сек`;
     if (timeLeft <= 0) {
-      clearInterval(timerInterval);
+      clearInterval(interval);
       timer.textContent = "Можно переходить дальше!";
       nextBtn.disabled = false;
     }
@@ -34,17 +54,28 @@ function startAdTimer() {
 }
 
 function loadAd() {
-  if (adFrame) {
-    adFrame.src = adUrls[currentIndex];
-    console.log("Показ рекламы:", adUrls[currentIndex]);
-    startAdTimer();
-  }
+  adFrame.src = adUrls[currentIndex];
+  startAdTimer();
 }
 
-nextBtn.addEventListener("click", () => {
+nextBtn.addEventListener("click", async () => {
+  if (uid) {
+    const userRef = doc(db, "users", uid);
+    await updateDoc(userRef, {
+      views: increment(1),
+      earnings: increment(0.0002) // награда в LTC
+    });
+  }
+
   currentIndex = (currentIndex + 1) % adUrls.length;
   loadAd();
 });
 
-// Инициализация: показать первую рекламу
-loadAd();
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    uid = user.uid;
+    loadAd();
+  } else {
+    window.location.href = "auth.html";
+  }
+});
