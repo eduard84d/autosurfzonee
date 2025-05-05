@@ -17,9 +17,9 @@
       border: 2px solid #0077cc;
       margin-bottom: 20px;
     }
-    #timer, #balance {
-      font-size: 20px;
-      margin: 10px 0;
+    #timer {
+      font-size: 24px;
+      margin-bottom: 10px;
       color: #0077cc;
     }
     button {
@@ -33,19 +33,15 @@
     }
     button:disabled {
       background: #ccc;
-      cursor: not-allowed;
     }
   </style>
 </head>
 <body>
-  <h1>Сёрфинг рекламы</h1>
-  <div id="balance">Ваш баланс: 0.000 LTC</div>
-  <div id="timer">Следующая реклама через: <span id="count">15</span> сек</div>
+  <h1>Рекламный просмотр</h1>
+  <div id="timer">Подождите: 15 сек</div>
   <iframe id="adFrame" src="" allow="autoplay"></iframe>
   <button id="nextBtn" disabled>Следующая реклама</button>
-  <p><button id="withdrawBtn" disabled>Вывести средства</button> (минимум 0.010 LTC)</p>
 
-  <script type="module" src="surf.js"></script>
+  <script src="surf.js"></script>
 </body>
 </html>
-
