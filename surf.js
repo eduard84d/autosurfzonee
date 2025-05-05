@@ -45,16 +45,19 @@ function updateBalanceUI(value) {
   withdrawBtn.disabled = value < MIN_WITHDRAW;
 }
 
+// обновляем баланс с Firebase
 async function loadBalance() {
   if (!uid) return;
   const userRef = doc(db, "users", uid);
   const snap = await getDoc(userRef);
   const bal = snap.exists() ? snap.data().earnings : 0;
+  console.log(`Баланс пользователя: ${bal}`);
   updateBalanceUI(bal);
 }
 
 // показываем рекламу и запускаем таймер
 function loadAd() {
+  console.log(`Загружаем рекламу на ссылке: ${links[currentIndex]}`);
   iframe.src = links[currentIndex];
   nextBtn.disabled = true;
   let timeLeft = 15;
@@ -72,6 +75,7 @@ function loadAd() {
 
 // при клике «Следующая реклама»
 nextBtn.addEventListener("click", async () => {
+  console.log("Реклама просмотрена, начисляем награду...");
   // начисляем награду
   if (uid) {
     const userRef = doc(db, "users", uid);
@@ -97,7 +101,9 @@ onAuthStateChanged(auth, async user => {
     window.location.href = "auth.html";
   } else {
     uid = user.uid;
+    console.log(`Пользователь авторизован: ${uid}`);
     await loadBalance();
     loadAd();
   }
 });
+
