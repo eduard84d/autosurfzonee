@@ -1,9 +1,7 @@
-console.log("surf.js загружен");
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 import { getFirestore, doc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyCgmPqdrQy-A68EULCW8PAK8NKWpgwYEA4",
   authDomain: "autosurfzone-b0f2e.firebaseapp.com",
@@ -17,8 +15,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Список рекламных ссылок
-const adUrls = [
+const ads = [
   "https://antautosurf.com/?ref=29085",
   "https://faucetpay.io/?r=2738792",
   "https://socpublic.com/?i=9480820&slide=1",
@@ -27,56 +24,47 @@ const adUrls = [
   "https://rollercoin.com/?r=kndi047d",
   "https://viefaucet.com?r=61e83d735cc8356fa4bded97",
   "https://www.coinpayu.com/?r=eduard85",
-  "https://www.binance.com/referral/earn-together/refertoearn2000usdc/claim?hl=ru&ref=GRO_14352_KKBV3",
   "https://freebitco.in/?r=36730895"
 ];
 
-let currentIndex = 0;
 let uid = null;
+let currentIndex = 0;
 
-const adFrame = document.getElementById("adFrame");
-const timer = document.getElementById("timer");
-const nextBtn = document.getElementById("nextBtn");
+const status = document.getElementById("status");
+const btn = document.getElementById("startAd");
 
-function startAdTimer() {
-  let timeLeft = 15;
-  timer.textContent = `Подождите: ${timeLeft} сек`;
-  nextBtn.disabled = true;
+btn.addEventListener("click", () => {
+  const adUrl = ads[currentIndex];
+  const adWindow = window.open(adUrl, "_blank");
 
-  const interval = setInterval(() => {
-    timeLeft--;
-    timer.textContent = `Подождите: ${timeLeft} сек`;
-    if (timeLeft <= 0) {
-      clearInterval(interval);
-      timer.textContent = "Можно переходить дальше!";
-      nextBtn.disabled = false;
+  status.textContent = "Ожидаем 15 секунд...";
+  btn.disabled = true;
+
+  const timer = setTimeout(async () => {
+    if (!adWindow.closed) {
+      adWindow.close();
+      if (uid) {
+        const userRef = doc(db, "users", uid);
+        await updateDoc(userRef, {
+          views: increment(1),
+          earnings: increment(0.001) // Можно увеличить, если надо
+        });
+      }
+      status.textContent = "Зачтено! Можно смотреть следующую рекламу.";
+      currentIndex = (currentIndex + 1) % ads.length;
+    } else {
+      status.textContent = "Вы закрыли вкладку слишком рано.";
     }
-  }, 1000);
-}
-
-function loadAd() {
-  adFrame.src = adUrls[currentIndex];
-  startAdTimer();
-}
-
-nextBtn.addEventListener("click", async () => {
-  if (uid) {
-    const userRef = doc(db, "users", uid);
-    await updateDoc(userRef, {
-      views: increment(1),
-      earnings: increment(0.0002) // награда в LTC
-    });
-  }
-
-  currentIndex = (currentIndex + 1) % adUrls.length;
-  loadAd();
+    btn.disabled = false;
+  }, 15000);
 });
 
 onAuthStateChanged(auth, (user) => {
   if (user) {
     uid = user.uid;
-    loadAd();
+    status.textContent = "Нажмите кнопку для просмотра рекламы.";
   } else {
     window.location.href = "auth.html";
   }
 });
+
