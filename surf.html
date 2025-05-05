@@ -1,18 +1,123 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>Серфинг | AutoSurfZone</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Сёрфинг — AutoSurfZone</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #f0f8ff;
+      padding: 20px;
+    }
+    iframe {
+      width: 100%;
+      height: 400px;
+      border: 2px solid #0077cc;
+      margin-bottom: 20px;
+    }
+    #timer {
+      font-size: 24px;
+      margin-bottom: 10px;
+      color: #0077cc;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 18px;
+      background: #0077cc;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:disabled {
+      background: #ccc;
+    }
+  </style>
 </head>
 <body>
-  <header><h1>🌐 Серфинг сайтов</h1></header>
-  <main>
-    <iframe id="adFrame" src="https://antautosurf.com/?ref=29085" width="100%" height="400px"></iframe>
-    <p id="status">Просматривайте сайт...</p>
-    <button onclick="loadNextAd()">Следующий сайт</button>
-  </main>
-  <script src="surf.js"></script>
+  <h1>Рекламный просмотр</h1>
+  <div id="timer">Подождите: 15 сек</div>
+  <iframe id="adFrame" src="" allow="autoplay"></iframe>
+  <button id="nextBtn" disabled>Следующая реклама</button>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+    import { getFirestore, doc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCgmPqdrQy-A68EULCW8PAK8NKWpgwYEA4",
+      authDomain: "autosurfzone-b0f2e.firebaseapp.com",
+      projectId: "autosurfzone-b0f2e",
+      storageBucket: "autosurfzone-b0f2e.appspot.com",
+      messagingSenderId: "787957968303",
+      appId: "1:787957968303:web:17461efc4e06ae5c5c135a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const links = [
+      "https://antautosurf.com/?ref=29085",
+      "https://faucetpay.io/?r=2738792",
+      "https://socpublic.com/?i=9480820&slide=1",
+      "https://bitsbon.com/?ref=5148",
+      "https://payeer.com/?session=12482302",
+      "https://rollercoin.com/?r=kndi047d",
+      "https://viefaucet.com?r=61e83d735cc8356fa4bded97",
+      "https://www.coinpayu.com/?r=eduard85",
+      "https://www.binance.com/referral/earn-together/refertoearn2000usdc/claim?hl=ru&ref=GRO_14352_KKBV3",
+      "https://freebitco.in/?r=36730895"
+    ];
+
+    let currentIndex = 0;
+    let uid = null;
+
+    const adFrame = document.getElementById("adFrame");
+    const timer = document.getElementById("timer");
+    const nextBtn = document.getElementById("nextBtn");
+
+    function loadAd() {
+      adFrame.src = links[currentIndex];
+      nextBtn.disabled = true;
+      let timeLeft = 15;
+      timer.textContent = `Подождите: ${timeLeft} сек`;
+
+      const interval = setInterval(() => {
+        timeLeft--;
+        timer.textContent = `Подождите: ${timeLeft} сек`;
+        if (timeLeft <= 0) {
+          clearInterval(interval);
+          timer.textContent = "Можно переходить дальше!";
+          nextBtn.disabled = false;
+        }
+      }, 1000);
+    }
+
+    nextBtn.addEventListener("click", async () => {
+      if (uid) {
+        const userRef = doc(db, "users", uid);
+        await updateDoc(userRef, {
+          views: increment(1),
+          earnings: increment(0.001)
+        });
+      }
+
+      currentIndex = (currentIndex + 1) % links.length;
+      loadAd();
+    });
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        uid = user.uid;
+        loadAd();
+      } else {
+        window.location.href = "auth.html"; // Перенаправление на авторизацию
+      }
+    });
+  </script>
 </body>
 </html>
